@@ -1,0 +1,49 @@
+import psutil
+import time
+import multiprocessing
+
+
+class CPUUsageModule:
+    def __init__(self):
+        self.cpu_loads = []
+        self.current_loads = []
+        self.set_increase_percentage()
+        self.start_monitoring()
+
+    def set_increase_percentage(self):
+        input_value = input("Enter the CPU load increase percentage: ")
+        if input_value:
+            self.increase_percentage = int(input_value)
+        else:
+            self.increase_percentage = 0
+
+    def start_monitoring(self):
+        num_cores = multiprocessing.cpu_count()
+        self.cpu_loads = [0] * num_cores
+        self.current_loads = [0] * num_cores
+        self.display_cpu_load()
+
+        try:
+            current_percentage = 0
+            while current_percentage < 100:
+                current_percentage += self.increase_percentage
+                self.update_loads(current_percentage)
+                self.display_cpu_load()
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("Program terminated.")
+
+    def update_loads(self, target_load):
+        cpu_percent = psutil.cpu_percent(interval=1, percpu=True)
+        for core in range(len(self.cpu_loads)):
+            self.cpu_loads[core] = min(target_load, 100)
+            self.current_loads[core] = cpu_percent[core]
+
+    def display_cpu_load(self):
+        for core, load in enumerate(self.cpu_loads):
+            current_load = self.current_loads[core]
+            print(f"Core {core + 1}: {load}% (Current Load: {current_load}%)")
+
+
+if __name__ == "__main__":
+    CPUUsageModule()
